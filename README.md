@@ -1,3 +1,5 @@
+[![pre-commit.ci status](https://results.pre-commit.ci/badge/github/HHRI-Transplantation/allocation-policy/main.svg)](https://results.pre-commit.ci/latest/github/HHRI-Transplantation/allocation-policy/main)
+
 # allocation-policy
 
 Implementation of allocation policies.
