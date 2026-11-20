@@ -3,6 +3,8 @@ from __future__ import annotations
 from collections.abc import Callable
 
 import polars as pl
+from sim_utils import abo_compatibility
+from sim_utils import age_at_listing
 from sim_utils import collapse_abo
 from sim_utils import PolarsFrame
 
@@ -78,6 +80,46 @@ def allocation_pathway(
         pathway = policy_9_8_H
 
     return pathway
+
+
+def sort_ptr(frame: PolarsFrame) -> PolarsFrame:
+    '''
+
+        Sorts the potential transplant recipients
+        into a match run.
+
+        I'm making the executivie decision to simplify this.
+        I will only be sorting based on the first
+        couple of categories and will ignore the later
+        tiebreakers that shouldn't (in theory) impact
+        the sort too much.
+
+    '''
+    abo_compat = abo_compatibility(
+        pl.col('CAN_ABO'),
+        pl.col('DON_ABO'),
+    )
+    return (
+        frame
+        .sort(
+            by=(
+                'tier',
+                'liver_allocation_points',
+                'allocation_meld',
+                abo_compat,
+                age_at_listing(),
+            ),
+            descending=(
+                False,
+                True,
+                True,
+                False,
+                False,
+            ),
+            nulls_last=True,
+            maintain_order=True,
+        )
+    )
 
 
 def dummy_policy(frame: PolarsFrame) -> PolarsFrame:
