@@ -1,15 +1,62 @@
 from __future__ import annotations
 
+from unittest import mock
+
 import polars as pl
 import pytest
 from polars.testing import assert_frame_equal
 
+from allocation_policy import acuity_circles
 from allocation_policy.acuity_circles import allocation_pathway
 from allocation_policy.acuity_circles import dummy_policy
+from allocation_policy.acuity_circles import generate_match
 from allocation_policy.acuity_circles import policy_9_8_E
 from allocation_policy.acuity_circles import policy_9_8_F
 from allocation_policy.acuity_circles import policy_9_8_G
 from allocation_policy.acuity_circles import policy_9_8_H
+
+
+@pytest.mark.parametrize(
+    'polars_frame_function',
+    (
+        pl.DataFrame,
+        pl.LazyFrame,
+    ),
+)
+def test_generate_match(polars_frame_function):
+
+    frame = polars_frame_function(
+        data={'a': [1, 2, 3]},
+        schema={'a': pl.Int64},
+    )
+
+    with (
+        mock.patch.object(
+            acuity_circles,
+            'allocation_pathway',
+            return_value=dummy_policy,
+        ),
+        mock.patch.object(
+            acuity_circles,
+            'sort_ptr',
+            side_effect=lambda x: x,
+        ),
+    ):
+        frame = generate_match(frame, '', 0)
+
+    expected = polars_frame_function(
+        data={
+            'ptr_sequence_num': [1, 2, 3],
+            'a': [1, 2, 3],
+            'tier': [None, None, None],
+        },
+        schema={
+            'ptr_sequence_num': pl.UInt32,
+            'a': pl.Int64,
+            'tier': pl.Int64,
+        },
+    )
+    assert_frame_equal(frame, expected)
 
 
 @pytest.mark.parametrize(

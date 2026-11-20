@@ -21,6 +21,32 @@ STAT_1A_CD = 6011
 STAT_1B_CD = 6012
 
 
+def generate_match(
+    frame: PolarsFrame,
+    don_non_hr_beat: str | None,
+    don_age_in_months: int | None,
+) -> PolarsFrame:
+    '''
+
+        Takes the frame and sorts it according to
+        policy.
+
+    '''
+
+    policy_func = allocation_pathway(
+        don_non_hr_beat,
+        don_age_in_months,
+    )
+    frame = policy_func(frame)
+    frame = sort_ptr(frame)
+    frame = frame.with_row_index(
+        name='ptr_sequence_num',
+        offset=1,
+    )
+
+    return frame
+
+
 def allocation_pathway(
     don_non_hr_beat: str | None,
     don_age_in_months: int | None,
